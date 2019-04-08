@@ -5,7 +5,6 @@ class Home extends Component{
 	  keyCount = 0;
 	  quesCount = 1;
 	  state = {
-	  	  variableBox : [],
 	  	  questionsBox : [],
 	  	  value: 'int',
 	  	  questionTypes : {
@@ -66,8 +65,7 @@ class Home extends Component{
 					    <td><label>Solution</label></td>
 					    <td><textarea className="input-box" name={`ans_txt_${this.quesCount}`} rows="2" cols="30"></textarea></td> 
 					  </tr>
-
-					  {this.state.variableBox.length>0 && this.state.variableBox.map(x=>x)}
+					  {this.state['variableBox_'+this.quesCount] && this.state['variableBox_'+this.quesCount].map(x=>x)}
 					  <tr className="margin-top-5">
 					    <td><label>Add variables</label></td>
 					    <td><button className="btn-default" onClick={this.addVariable}>Add +</button></td> 
@@ -76,13 +74,18 @@ class Home extends Component{
 				</table>
 	     )
 	  }
-
-	  addVariable = (e)=>{
-	  	 e.preventDefault()
-	  	 let a = this.state.variableBox;
-	  	     a.push(this.newVariable())
+	  addVariable = async (e)=>{
+	     e.preventDefault();
+	     console.log(this.quesCount)
+	  	 let k = 'variableBox_' + (this.quesCount);
+	  	 console.log(this.state['variableBox_'+this.quesCount])
+	  	 if(!this.state['variableBox_'+this.quesCount]){
+	  	     await this.setState({ [k] : []})
+	  	 }
+	  	 this.state['variableBox_'+this.quesCount].push(this.newVariable())
+	  	 console.log(this.state['variableBox_'+this.quesCount])
 	  	 this.setState({
-             variableBox : a
+             [k] : this.state['variableBox_'+this.quesCount]
 	  	 })
 	  }
 	  addQuestions = (e)=>{
@@ -149,7 +152,7 @@ class Home extends Component{
 											    <td><label>Question</label></td>
 											    <td><textarea className="input-box" name="ques_txt" rows="5" cols="30"></textarea></td> 
 											  </tr>
-											  {this.state.variableBox.length>0 && this.state.variableBox.map(x=>x)}
+											  {this.state.variableBox_1 && this.state.variableBox_1.map(x=>x)}
 											  <tr className="margin-top-5">
 											    <td><label>Add variables</label></td>
 											    <td><button className="btn-default" onClick={this.addVariable}>Add +</button></td> 
