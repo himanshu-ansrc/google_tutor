@@ -5,15 +5,29 @@ class Home extends Component{
 	  keyCount = 0;
 	  quesCount = 1;
 	  state = {
-	  	  questionsBox : [],
+	  	  variableBox: [],
 	  	  value: 'int',
 	  	  questionTypes : {
 	  	  	  
-	  	  }
+	  	  },
+	  	  sheetsList : [],
+	  	  is_new: true
 	  }
 	  handleChange = (e)=>{
-	  	console.log(e.target.value)
-        this.setState({value: e.target.value});
+	  	 if(e.target.name=='work_tmp_name' &&e.target.value==''){
+            this.setState({is_new: true})
+	  	 }else{
+	  	 	this.setState({is_new: false})
+	  	 }
+	  	 this.setState({value: e.target.value});
+      }
+      async componentDidMount(){
+      	 const result = await axios.get('/list-wrksheets');
+      	 let a = [];
+      	 for(let x in result.data){
+             a.push(<option value={x}>{x}</option>)
+      	 }
+      	 this.setState({sheetsList: a})
       }
 	  newVariable = ()=>{
 	  	 ++this.keyCount;
@@ -39,62 +53,23 @@ class Home extends Component{
              </Fragment>
 	     )
 	  }
-	  newQuestion = ()=>{
-	  	 ++this.quesCount;
-	  	 return (
-				<table className="prob-table" key={this.quesCount}>
-				   <tbody>
-				      <tr className="margin-top-5">
-					    <td><label>Problem name</label></td>
-					    <td><input className="input-box" type="text" name={`prob_tmp_name_${this.quesCount}`} /></td> 
-					  </tr>
-				      <tr className="margin-top-5">
-					    <td><label>Problem type</label></td>
-					    <td>
-			        	   <select className="input-box" name={`ques_type_${this.quesCount}`} onChange={this.handleChange}>
-				              <option value="normal">Nomal</option>
-				              <option value="mcq">MCQ</option>
-				           </select>
-					    </td> 
-					  </tr>
-					  <tr className="margin-top-5">
-					    <td><label>Question</label></td>
-					    <td><textarea className="input-box" name={`ques_txt_${this.quesCount}`}rows="5" cols="30"></textarea></td> 
-					  </tr>
-					  <tr className="margin-top-5">
-					    <td><label>Solution</label></td>
-					    <td><textarea className="input-box" name={`ans_txt_${this.quesCount}`} rows="2" cols="30"></textarea></td> 
-					  </tr>
-					  {this.state['variableBox_'+this.quesCount] && this.state['variableBox_'+this.quesCount].map(x=>x)}
-					  <tr className="margin-top-5">
-					    <td><label>Add variables</label></td>
-					    <td><button className="btn-default" onClick={this.addVariable}>Add +</button></td> 
-					  </tr>
-				   </tbody>
-				</table>
-	     )
-	  }
 	  addVariable = async (e)=>{
 	     e.preventDefault();
-	     console.log(this.quesCount)
-	  	 let k = 'variableBox_' + (this.quesCount);
-	  	 console.log(this.state['variableBox_'+this.quesCount])
-	  	 if(!this.state['variableBox_'+this.quesCount]){
-	  	     await this.setState({ [k] : []})
-	  	 }
-	  	 this.state['variableBox_'+this.quesCount].push(this.newVariable())
-	  	 console.log(this.state['variableBox_'+this.quesCount])
+	  	 this.state['variableBox'].push(this.newVariable())
 	  	 this.setState({
-             [k] : this.state['variableBox_'+this.quesCount]
+             variableBox : this.state['variableBox']
 	  	 })
 	  }
-	  addQuestions = (e)=>{
-	  	 e.preventDefault()
-	  	 let a = this.state.questionsBox;
-	  	     a.push(this.newQuestion())
-	  	 this.setState({
-             questionsBox : a
-	  	 })
+	  refreshQuestion = (e)=>{
+	  	   e.preventDefault();
+           let f = document.getElementById('main_form');
+           for(let x in f.elements){
+           	       console.log(f.elements[x].type)
+           	       if(f.elements[x].type != "select-one"){
+                      f.elements[x].value = "";
+           	       }
+           }
+           this.setState({variableBox: []})
 	  }
 	  dataSubmit = async (e)=>{
          e.preventDefault();
@@ -124,13 +99,24 @@ class Home extends Component{
 	        	 <div className="flex main-content-wrapper">
 		        	 <div className="flex space-bw main-content">
 		        	          <div className="ques-table">
-									<form method="post" onSubmit={this.dataSubmit}>
+									<form method="post" onSubmit={this.dataSubmit} id="main_form">
 									   <table className="padding-botm-8">
 								        <tbody>
-									      <tr className="margin-top-5">
-										    <td><label>Worksheet name</label></td>
-										    <td><input className="input-box" type="text" name="work_tmp_name" /></td> 
+								          <tr className="margin-top-5">
+										    <td><label>Worksheet list</label></td>
+										    <td>
+										       	  <select className="input-box" name="work_tmp_name" onChange={this.handleChange}>
+										       	   <option value="">Select</option>
+										           {this.state.sheetsList.length>0 && this.state.sheetsList.map(x=>x)}
+										          </select>
+										    </td> 
 										  </tr>
+                                           {this.state.is_new 
+                                              && <tr className="margin-top-5">
+										            <td><label>New worksheet</label></td>
+										            <td><input className="input-box" type="text" name="work_tmp_name" /></td> 
+										         </tr>
+										   }
 									    </tbody>	  
 									   </table>
 										<table className="prob-table">
@@ -152,22 +138,18 @@ class Home extends Component{
 											    <td><label>Question</label></td>
 											    <td><textarea className="input-box" name="ques_txt" rows="5" cols="30"></textarea></td> 
 											  </tr>
-											  {this.state.variableBox_1 && this.state.variableBox_1.map(x=>x)}
+											  {this.state.variableBox && this.state.variableBox.map(x=>x)}
 											  <tr className="margin-top-5">
 											    <td><label>Add variables</label></td>
 											    <td><button className="btn-default" onClick={this.addVariable}>Add +</button></td> 
 											  </tr>
+
+										  	  <tr className="margin-top-5">
+										        <td><button  className="btn-default margin-top-20" onClick={this.refreshQuestion}>Refresh Question</button></td>
+											    <td><button  className="btn-default margin-top-20">Generate</button></td> 
+											  </tr>
 										   </tbody>
-										</table>
-										{this.state.questionsBox.length>0 && this.state.questionsBox.map(x=>x)}
-										   <table className="prob-table">
-											   <tbody>
-											      <tr className="margin-top-5">
-												    <td><button  className="btn-default margin-top-20" onClick={this.addQuestions}>Add New Question</button></td>
-												    <td><button  className="btn-default margin-top-20">Generate</button></td> 
-												  </tr>
-											   </tbody>
-										   </table>										
+										</table>									
 									</form>
 			        	 	  </div>
 	                          <div>

@@ -26,6 +26,11 @@ devBundle.compile(app)
 
 app.use('/dist', express.static(path.join(CURRENT_WORKING_DIR, 'dist')))
 
+
+app.get('/list-wrksheets', (req, res)=>{
+       res.send(JSON.parse(fs.readFileSync('public/xmls/worksheets.json')));
+})
+
 app.get('*', (req, res)=>{
    res.send(Template());
 })
@@ -38,7 +43,6 @@ app.get('*', (req, res)=>{
 
 function tutelageTempalte(references){
 		 let params = [];
-		 console.log(references)
 		 if(references.paramsArr.length>0){
 		 	for(let x of references.paramsArr){
 	            params.push({
@@ -65,7 +69,6 @@ function tutelageTempalte(references){
 
 function worksheetTempalte(references){
 	     let prob_refs = [];        
-	     console.log(references)
 	     if(references.paramsArr.length>0){
 		 	for(let x of references.paramsArr){
 	            prob_refs.push({
@@ -92,6 +95,30 @@ function worksheetTempalte(references){
 	     }
 }
 
+
+function problemRefTemplate(references){
+	     let prob_refs = [];        
+	     if(references.paramsArr.length>0){
+		 	for(let x of references.paramsArr){
+	            prob_refs.push({
+	            	   name: 'bind',
+	            	   attrs: {
+	            	   	  name: x.key,
+	            	   	  val: x.value
+	            	   }
+	            })
+		 	}
+	     }
+	     return {
+                      name:'problem_ref', 
+                      attrs: {
+                         'name': references.prob_tmp_name
+                      },
+                      children : prob_refs
+                }
+}
+
+
 function solutionTemplate(references){
 	     if(references.ques_type==="normal"){
                return multipleChoiseSolutionTemplate();
@@ -103,7 +130,6 @@ function solutionTemplate(references){
 
 function problemTemplate(references){
 	 let params = [];
-	 console.log(references)
 	 if(references.paramsArr.length>0){
 	 	for(let x of references.paramsArr){
             params.push({
@@ -148,17 +174,47 @@ function worksheetRefTempalte(references){
 	     }
 }
 
+
+
 app.post('/', (req, res)=>{
-	    const xmlToSave = crypto.randomBytes(16).toString('hex')+'.xml';
-	    console.log(req.body.paramsArr)
-        res.set('Content-Type', 'text/xml');
-	    let xml = jsontoxml([
-	    	 tutelageTempalte(req.body),
-	         problemTemplate(req.body),
-	         worksheetTempalte(req.body),
-	         worksheetRefTempalte(req.body)
-	    ]);
-        res.send(XMLFormatter(`<xml>${xml}</xml>`))
+	    const wrksheetName = (req.body.work_tmp_name).trim();
+	    const workSheets = JSON.parse(fs.readFileSync('public/xmls/worksheets.json'));
+	    if(workSheets[wrksheetName]){
+           let problemTemp = problemTemplate(req.body),
+               preWrkTemplate = JSON.parse(fs.readFileSync('public/xmls/'+wrksheetName+'.txt'));
+
+               //ADD PROBLEM TO TEMPLATE 
+               preWrkTemplate.push(problemTemp);
+
+               //ADD PROBLEM REF TO TEMPLATE
+               for(let x=0; x<preWrkTemplate.length; x++){
+               	   if(preWrkTemplate[x]['name']=='worksheet_tmpl'){
+               	   	  preWrkTemplate[x]['children'].push(problemRefTemplate(req.body))
+               	   }
+               }
+               //STORE NEW TEMPALTE 
+               fs.writeFileSync('public/xmls/'+wrksheetName+'.txt', JSON.stringify(preWrkTemplate))               
+               let d = jsontoxml(
+                   preWrkTemplate
+               )
+               res.send(XMLFormatter(`<xml>${d}</xml>`))
+	    }else{
+             let data = [
+		    	 tutelageTempalte(req.body),
+		         problemTemplate(req.body),
+		         worksheetTempalte(req.body),
+		         worksheetRefTempalte(req.body)
+		    ]
+	        let xml = jsontoxml(data);
+	        workSheets[wrksheetName] = wrksheetName;
+	        
+	        fs.writeFileSync('public/xmls/worksheets.json', JSON.stringify(workSheets))
+	        fs.writeFileSync('public/xmls/'+wrksheetName+'.txt', JSON.stringify(data))
+	        res.send(XMLFormatter(`<xml>${xml}</xml>`))
+
+	    }
+	    
+        
 });
 
 
