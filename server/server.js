@@ -178,6 +178,8 @@ function worksheetRefTempalte(references){
 
 app.post('/', (req, res)=>{
 	    const wrksheetName = (req.body.work_tmp_name).trim();
+	    const newwrksheetName = req.body.new_work_tmp_name ? (req.body.new_work_tmp_name).trim() : '';
+
 	    const workSheets = JSON.parse(fs.readFileSync('public/xmls/worksheets.json'));
 	    if(workSheets[wrksheetName]){
            let problemTemp = problemTemplate(req.body),
@@ -206,10 +208,10 @@ app.post('/', (req, res)=>{
 		         worksheetRefTempalte(req.body)
 		    ]
 	        let xml = jsontoxml(data);
-	        workSheets[wrksheetName] = wrksheetName;
-	        
+	        workSheets[newwrksheetName] = newwrksheetName;
+	        console.log(newwrksheetName)
 	        fs.writeFileSync('public/xmls/worksheets.json', JSON.stringify(workSheets))
-	        fs.writeFileSync('public/xmls/'+wrksheetName+'.txt', JSON.stringify(data))
+	        fs.writeFileSync('public/xmls/'+newwrksheetName+'.txt', JSON.stringify(data))
 	        res.send(XMLFormatter(`<xml>${xml}</xml>`))
 
 	    }

@@ -87,8 +87,9 @@ class Home extends Component{
          const ques_txt = e.target.elements.ques_txt.value,
                prob_tmp_name = e.target.elements.prob_tmp_name.value,
                work_tmp_name = e.target.elements.work_tmp_name.value,
+               new_work_tmp_name = e.target.elements.new_work_tmp_name ? e.target.elements.new_work_tmp_name.value: '',
                ques_type = e.target.elements.ques_type.value;
-         const {data} = await axios.post('/', {ques_txt, prob_tmp_name, work_tmp_name, ques_type, paramsArr});
+         const {data} = await axios.post('/', {ques_txt, prob_tmp_name, work_tmp_name, new_work_tmp_name, ques_type, paramsArr});
          document.getElementById('show_xml').value = data;
 	  	 return false;
 	  }
@@ -114,7 +115,7 @@ class Home extends Component{
                                            {this.state.is_new 
                                               && <tr className="margin-top-5">
 										            <td><label>New worksheet</label></td>
-										            <td><input className="input-box" type="text" name="work_tmp_name" /></td> 
+										            <td><input className="input-box" type="text" name="new_work_tmp_name" /></td> 
 										         </tr>
 										   }
 									    </tbody>	  
@@ -129,7 +130,7 @@ class Home extends Component{
 											    <td><label>Problem type</label></td>
 											    <td>
 									        	  <select className="input-box" name="ques_type" onChange={this.handleChange}>
-										            <option value="normal">Nomal</option>
+										            <option value="normal">Normal</option>
 										            <option value="mcq">MCQ</option>
 										          </select>
 											    </td> 
@@ -143,7 +144,6 @@ class Home extends Component{
 											    <td><label>Add variables</label></td>
 											    <td><button className="btn-default" onClick={this.addVariable}>Add +</button></td> 
 											  </tr>
-
 										  	  <tr className="margin-top-5">
 										        <td><button  className="btn-default margin-top-20" onClick={this.refreshQuestion}>Refresh Question</button></td>
 											    <td><button  className="btn-default margin-top-20">Generate</button></td> 
