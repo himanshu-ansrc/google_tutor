@@ -35,12 +35,6 @@ app.get('*', (req, res)=>{
    res.send(Template());
 })
 
-
-
-
-
-
-
 function tutelageTempalte(references){
 		 let params = [];
 		 if(references.paramsArr.length>0){
@@ -121,15 +115,18 @@ function problemRefTemplate(references){
 
 function solutionTemplate(references){
 	     if(references.ques_type==="normal"){
-               return multipleChoiseSolutionTemplate();
+               return normalSolutionTemplate();
 	     }else if(references.ques_type==="mcq"){
-               return multipleChoiseSolutionTemplate();
+               return multipleChoiseSolutionTemplate(references);
+	     }else if(references.ques_type==="fib"){
+	     	   return fibSolutionTemplate(references);
 	     }
 	                   
 }
 
 function problemTemplate(references){
 	 let params = [];
+	 let multiQuesText = '';
 	 if(references.paramsArr.length>0){
 	 	for(let x of references.paramsArr){
             params.push({
@@ -141,12 +138,36 @@ function problemTemplate(references){
             })
 	 	}
 	 }
+     let text = `<p>${references.ques_txt}</p>`;
+
+
+     if(references.ques_type==="fib"){
+	    let ques_txt = (references.ques_txt).replace('___', '<fib type="int" name="AA"/>');
+		text = `<group><p>${ques_txt}</p>`;
+      }
+
+
+
+      if(references.ques_type==="mcq"){
+	    let options = (references.ans_txt).split("\n");
+		let optionsWrapper = '';
+		let c = 0, sol='';
+		for(let x=0; x<options.length; x++){
+			let k = options[x].split('##');
+			let opt = k[1]==1? "AA" : "c"+c
+			optionsWrapper += '<choise name="'+opt+'">'+k[0]+'</choise>';
+			++c;
+		}
+		text = `<group><p>${references.ques_txt}</p>${optionsWrapper}`;
+      }
+    
 	 return {
               name : `problem_tmpl`,
               attrs: {
-                     'name': references.prob_tmp_name
+                     'name': references.prob_tmp_name,
+                      width: '400'
                  },
-              text: `<p>${references.ques_txt}</p>`,
+              text: text,
               children:[
                     {
                     	name:'params',children : params
@@ -160,10 +181,30 @@ function problemTemplate(references){
 }
 
 
-function multipleChoiseSolutionTemplate(){
-	return `<solution><repeat val="4" index="i"><cond><choice_ref name="c$i+1$"/>== $i</cond></repeat></solution>`;
+function multipleChoiseSolutionTemplate(references){
+	let options = (references.ans_txt).split("\n");
+	let optionsWrapper = '';
+	let c = 0, sol='';
+	for(let x=0; x<options.length; x++){
+		let k = options[x].split('##');
+		let opt = k[1]==1? "AA" : "c"+c
+		optionsWrapper += '<cond><choice_ref name="'+opt+'"/>== '+k[1]+'</cond>';
+		++c;
+	}
+	return `<solution><grid columns="150px" gap="5px">${optionsWrapper}</grid></solution></group>`;
 }
 
+
+function fibSolutionTemplate(references){
+	let ans_txt = references.ans_txt;
+	return `<solution><cond><fib_ref name="AA"/>==${ans_txt}</cond></solution></group>`;
+}
+
+
+
+function normalSolutionTemplate(){
+	return `<solution></solution>`;
+}
 
 function worksheetRefTempalte(references){
 	 	 return {
@@ -179,19 +220,21 @@ function worksheetRefTempalte(references){
 app.post('/', (req, res)=>{
 	    const wrksheetName = (req.body.work_tmp_name).trim();
 	    const newwrksheetName = req.body.new_work_tmp_name ? (req.body.new_work_tmp_name).trim() : '';
-
+        if(newwrksheetName.length>0){
+        	req.body.work_tmp_name = newwrksheetName;
+        }
 	    const workSheets = JSON.parse(fs.readFileSync('public/xmls/worksheets.json'));
 	    if(workSheets[wrksheetName]){
            let problemTemp = problemTemplate(req.body),
                preWrkTemplate = JSON.parse(fs.readFileSync('public/xmls/'+wrksheetName+'.txt'));
 
                //ADD PROBLEM TO TEMPLATE 
-               preWrkTemplate.push(problemTemp);
+               preWrkTemplate.unshift(problemTemp);
 
                //ADD PROBLEM REF TO TEMPLATE
                for(let x=0; x<preWrkTemplate.length; x++){
                	   if(preWrkTemplate[x]['name']=='worksheet_tmpl'){
-               	   	  preWrkTemplate[x]['children'].push(problemRefTemplate(req.body))
+               	   	  preWrkTemplate[x]['children'].unshift(problemRefTemplate(req.body))
                	   }
                }
                //STORE NEW TEMPALTE 
@@ -209,7 +252,6 @@ app.post('/', (req, res)=>{
 		    ]
 	        let xml = jsontoxml(data);
 	        workSheets[newwrksheetName] = newwrksheetName;
-	        console.log(newwrksheetName)
 	        fs.writeFileSync('public/xmls/worksheets.json', JSON.stringify(workSheets))
 	        fs.writeFileSync('public/xmls/'+newwrksheetName+'.txt', JSON.stringify(data))
 	        res.send(XMLFormatter(`<xml>${xml}</xml>`))

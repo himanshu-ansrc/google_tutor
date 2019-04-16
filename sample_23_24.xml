@@ -1,0 +1,158 @@
+<problem_tmpl name="MCQ10" width="400">
+  <params>
+    <param name="A" type="int"/>
+    <param name="B" type="int"/>
+    <param name="C" type="int"/>
+  </params>
+  <group>
+    <p>
+      Trey and Kara were practicing archery. In Round 1, Trey first shot $A$ arrows and Kara shot $B$ arrows. Again, in Round 2, they both shot $C$ arrows each. Altogether, how many arrows did they shoot?
+    </p>
+    <p>
+      <img height="auto" src="https://res.cloudinary.com/ansr/image/upload/v1554966045/Tutor/arrow_image.png"/>
+    </p>
+    <grid columns="150px" gap="5px">
+      <cell>
+        <choice name="AA">$2$ &#215; $A$ &#215; $2$
+        </choice>
+      </cell>
+      <cell>
+        <choice name="c2">$2$ &#215; $B$
+        </choice>
+      </cell>
+      <cell>
+        <choice name="c3">$A$ + $2$
+        </choice>
+      </cell>
+    </grid>
+    <solutions>
+      <solution>
+        <cond>
+          <choice_ref name="AA"/>==1
+        </cond>  
+        <cond>
+          <choice_ref name="c2"/>==0
+        </cond>  
+        <cond>
+          <choice_ref name="c3"/>==0
+        </cond>  
+      </solution>
+    </solutions>
+  </group>
+</problem_tmpl>
+<problem_tmpl name="FIB_14" width="400">
+  <params>
+    <param name="A" type="int"/>
+    <param name="B" type="int"/>
+    <param name="C" type="int"/>
+  </params>
+  <group>
+    <p>
+      A sports shop sells badminton rackets in pairs. It sells $A$ pairs every week. How many rackets does it sell in $B$ weeks?
+    </p>
+    <p>The sports shop sells $A$ &#215; $B$ &#215; 
+      <fib type="int" name="AA"/> rackets.
+    </p>
+    <solutions>
+      <solution>
+        <cond>
+          <fib_ref name="AA"/>== $C$
+        </cond>
+      </solution>
+    </solutions>
+  </group>
+</problem_tmpl>
+<problem_tmpl name="FIB_S1" width="400">
+  <params>
+    <param name="A" type="int"/>
+    <param name="B" type="int"/>
+    <constraints>
+      $A*B$ &lt; 100
+    </constraints>  
+  </params>
+  <group>
+    <p>
+      Complete the equation:
+    </p>
+    <p>
+      $A$ &#215; 
+      <fib type="int" name="AA"/> = $A*B$ 
+    </p>
+    <solutions>
+      <solution>
+        <cond>
+          <fib_ref name="AA"/>== $B$
+        </cond>
+      </solution>
+    </solutions>
+  </group>
+</problem_tmpl>
+<problem_tmpl name="MCQ12" width="400">
+  <params>
+    <param name="A" type="int"/>
+    <param name="B" type="int"/>
+    <constraints>
+      $A*B$ &lt; 100
+    </constraints> 
+  </params>
+  <group>
+    <p>
+      Which of the following equations can you write using the multiplication sentence $A$ &#215; $B$ = $A*B$?
+    </p>
+    <grid columns="150px" gap="5px">
+      <cell>
+        <choice name="C1">$A$ &#247; $B$ = $A*B$
+        </choice>
+      </cell>
+      <cell>
+        <choice name="C2">$B$ &#247; $A$ = $A*B$
+        </choice>
+      </cell>
+      <cell>
+        <choice name="AA">$A*B$ &#247; $B$ = $A$
+        </choice>
+      </cell>
+      <cell>
+        <choice name="C3">$A+B$ &#247; $B$ = $A$
+        </choice>
+      </cell>
+    </grid>
+    <solutions>
+      <solution>
+        <cond>
+          <choice_ref name="AA"/>==1
+        </cond>
+        <cond>
+          <choice_ref name="C1"/>==0
+        </cond>
+        <cond>
+          <choice_ref name="C2"/>==0
+        </cond>
+        <cond>
+          <choice_ref name="C3"/>==0
+        </cond>
+      </solution>
+    </solutions>
+  </group>
+</problem_tmpl>
+<worksheet_tmpl name="WS6">
+  <problem_ref name="FIB_14">
+    <bind name="A" val="20"/>
+    <bind name="B" val="4"/>
+    <bind name="C" val="2"/>
+  </problem_ref>
+  <problem_ref name="MCQ10">
+    <bind name="A" val="3"/>
+    <bind name="B" val="3"/>
+    <bind name="C" val="3"/>
+  </problem_ref>
+  <problem_ref name="FIB_S1">
+    <bind name="A" val="26"/>
+    <bind name="B" val="2"/>
+  </problem_ref>
+  <problem_ref name="MCQ12">
+    <bind name="A" val="6"/>
+    <bind name="B" val="7"/>
+  </problem_ref>
+</worksheet_tmpl>
+<worksheet_ref name="WS6"/>                                                 

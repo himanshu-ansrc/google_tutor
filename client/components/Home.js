@@ -16,7 +16,7 @@ class Home extends Component{
 	  handleChange = (e)=>{
 	  	 if(e.target.name=='work_tmp_name' &&e.target.value==''){
             this.setState({is_new: true})
-	  	 }else{
+	  	 }else if(e.target.name=='work_tmp_name' &&e.target.value!=''){
 	  	 	this.setState({is_new: false})
 	  	 }
 	  	 this.setState({value: e.target.value});
@@ -85,11 +85,14 @@ class Home extends Component{
              }
          }
          const ques_txt = e.target.elements.ques_txt.value,
+               ans_txt = e.target.elements.ans_txt.value,
                prob_tmp_name = e.target.elements.prob_tmp_name.value,
                work_tmp_name = e.target.elements.work_tmp_name.value,
                new_work_tmp_name = e.target.elements.new_work_tmp_name ? e.target.elements.new_work_tmp_name.value: '',
                ques_type = e.target.elements.ques_type.value;
-         const {data} = await axios.post('/', {ques_txt, prob_tmp_name, work_tmp_name, new_work_tmp_name, ques_type, paramsArr});
+         const {data} = await axios.post('/', {ques_txt, ans_txt, prob_tmp_name, work_tmp_name, new_work_tmp_name, ques_type, paramsArr});
+         //data = data.replace('<xml>', '');
+         // data = data.replace('</xml>', '')
          document.getElementById('show_xml').value = data;
 	  	 return false;
 	  }
@@ -132,6 +135,7 @@ class Home extends Component{
 									        	  <select className="input-box" name="ques_type" onChange={this.handleChange}>
 										            <option value="normal">Normal</option>
 										            <option value="mcq">MCQ</option>
+										            <option value="fib">FIB</option>
 										          </select>
 											    </td> 
 											  </tr>
@@ -139,6 +143,13 @@ class Home extends Component{
 											    <td><label>Question</label></td>
 											    <td><textarea className="input-box" name="ques_txt" rows="5" cols="30"></textarea></td> 
 											  </tr>
+
+											  <tr className="margin-top-5">
+											    <td><label>Solutions</label></td>
+											    <td><textarea className="input-box" name="ans_txt" rows="5" cols="30"></textarea></td> 
+											  </tr>
+
+
 											  {this.state.variableBox && this.state.variableBox.map(x=>x)}
 											  <tr className="margin-top-5">
 											    <td><label>Add variables</label></td>
