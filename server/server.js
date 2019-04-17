@@ -139,6 +139,8 @@ function problemTemplate(references){
 	 	}
 	 }
      let text = `<p>${references.ques_txt}</p>`;
+     
+
 
 
      if(references.ques_type==="fib"){
@@ -155,10 +157,30 @@ function problemTemplate(references){
 		for(let x=0; x<options.length; x++){
 			let k = options[x].split('##');
 			let opt = k[1]==1? "AA" : "c"+c
-			optionsWrapper += '<choise name="'+opt+'">'+k[0]+'</choise>';
+			optionsWrapper += '<choice name="'+opt+'">'+k[0]+'</choice>';
 			++c;
 		}
-		text = `<group><p>${references.ques_txt}</p>${optionsWrapper}`;
+
+		if(references.ques_img!==''){
+         let imgData = (references.ques_img).split("##");
+         let src = (imgData[0]).trim(),
+             width = (imgData[1]).trim(),
+             height = (imgData[2]).trim();
+            imgData = `<img src=${src} width=${width} height=${height} />`;
+            text = `<group><p>${references.ques_txt}</p><p>${imgData}</p>${optionsWrapper}`;
+        }else
+	    	text = `<group><p>${references.ques_txt}</p>${optionsWrapper}`;
+      }
+
+
+      if(references.ques_img!=='' && references.ques_type!=="mcq"){
+         let imgData = (references.ques_img).split("##");
+            console.log(imgData)
+         let src = (imgData[0]).replace("\n", "").trim(),
+             width = (imgData[1]).replace("\n", "").trim(),
+             height = (imgData[2]).replace("\n", "").trim();
+            imgData = `<img src=${src} width=${width} height=${height} />`;
+            text += imgData;
       }
     
 	 return {
@@ -214,8 +236,6 @@ function worksheetRefTempalte(references){
 	     	  }
 	     }
 }
-
-
 
 app.post('/', (req, res)=>{
 	    const wrksheetName = (req.body.work_tmp_name).trim();

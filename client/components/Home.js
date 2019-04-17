@@ -81,16 +81,17 @@ class Home extends Component{
              	 	 value : e.target.elements['paramsval_'+x].value,
     		         type : e.target.elements['paramstyp_'+x].value
                  }
-                 paramsArr.push(p)
+                 paramsArr.push(p);
              }
          }
          const ques_txt = e.target.elements.ques_txt.value,
+               ques_img = e.target.elements.ques_img.value,
                ans_txt = e.target.elements.ans_txt.value,
                prob_tmp_name = e.target.elements.prob_tmp_name.value,
                work_tmp_name = e.target.elements.work_tmp_name.value,
                new_work_tmp_name = e.target.elements.new_work_tmp_name ? e.target.elements.new_work_tmp_name.value: '',
                ques_type = e.target.elements.ques_type.value;
-         const {data} = await axios.post('/', {ques_txt, ans_txt, prob_tmp_name, work_tmp_name, new_work_tmp_name, ques_type, paramsArr});
+         const {data} = await axios.post('/', {ques_txt, ques_img, ans_txt, prob_tmp_name, work_tmp_name, new_work_tmp_name, ques_type, paramsArr});
          //data = data.replace('<xml>', '');
          // data = data.replace('</xml>', '')
          document.getElementById('show_xml').value = data;
@@ -143,7 +144,10 @@ class Home extends Component{
 											    <td><label>Question</label></td>
 											    <td><textarea className="input-box" name="ques_txt" rows="5" cols="30"></textarea></td> 
 											  </tr>
-
+											  <tr className="margin-top-5">
+											    <td><label>Add Image</label></td>
+											    <td><textarea className="input-box" name="ques_img" rows="5" cols="30"></textarea></td> 
+											  </tr>
 											  <tr className="margin-top-5">
 											    <td><label>Solutions</label></td>
 											    <td><textarea className="input-box" name="ans_txt" rows="5" cols="30"></textarea></td> 
