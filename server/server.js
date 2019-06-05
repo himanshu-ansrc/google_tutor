@@ -1,4 +1,5 @@
 import express from 'express'
+import XLSX from 'xlsx';
 import path from 'path'
 import CONFIG from './../config'
 import bodyParser from 'body-parser'
@@ -7,6 +8,11 @@ import fs from 'fs'
 import jsontoxml from 'jsontoxml'
 import XMLFormatter from 'xml-formatter'
 import Template from './../template.js'
+
+import querystring from 'querystring'
+import formidable from 'formidable';
+import uuidv4 from 'uuid/v4';
+
 
 const app = express();
 
@@ -29,6 +35,90 @@ app.use('/dist', express.static(path.join(CURRENT_WORKING_DIR, 'dist')))
 
 app.get('/list-wrksheets', (req, res)=>{
        res.send(JSON.parse(fs.readFileSync('public/xmls/worksheets.json')));
+})
+
+app.get('/test-xlsx', (req, res)=>{
+	var workbook = XLSX.readFile('public/xmls/zzzz.xlsx');
+    
+
+
+	var sheet_name_list = workbook.SheetNames;
+
+	let xlsxJSON = XLSX.utils.sheet_to_json(workbook.Sheets[sheet_name_list[0]], {defVal:""});
+	let variableChecker = 0;
+
+    
+	var questionObj = {};
+	var arrayOfTemplateIdsCols = [];
+    questionObj['paramsArr'] = [];
+    
+    questionObj['prob_tmp_name'] = 'zzzzzz';
+	for(let arrEle of xlsxJSON){
+		 if(arrEle.col1=='Tutor ID'){
+		 	questionObj['work_tmp_name'] = arrEle.col2;
+            variableChecker = 1;
+		 }else if(arrEle.col1=='Conditions'){
+            variableChecker = 0;
+		 }
+		 if(arrEle.col1=='QUESTION'){
+		 	questionObj['ques_txt'] += arrEle.col2;
+		 }
+		 if(arrEle.col1=='QuesType'){
+            questionObj['ques_type'] = arrEle.col2;
+		 }
+		 if(arrEle.col1=='Answer stem'){
+		 	questionObj['ans_txt'] += arrEle.col2;
+		 }
+		 if(variableChecker==1 && arrEle.col1!='Tutor ID'){
+		 	questionObj['paramsArr'].push({
+                key : arrEle.col1,
+         	 	value : arrEle.col2,
+		        type : arrEle.col3
+            })
+		 } 
+	}
+    
+        let data = [
+		    	 tutelageTempalte(questionObj),
+		         problemTemplate(questionObj),
+		         tutelageRefTempalte(),
+		         worksheetTempalte(questionObj),
+		         worksheetRefTempalte(questionObj)
+		    ]
+	     let xml = jsontoxml(data);
+
+		res.send({
+			 test : xml
+		})
+	    // sheet_name_list.forEach((y)=>{
+     //       var worksheet = workbook.Sheets[y];
+     //       var headers = {};
+     //       var data = [];
+     //       for(let z in worksheet){
+     //       	   if(z[0] === '!') continue;
+     //       	   var tt = 0;
+     //       	   for (var i = 0; i < z.length; i++){
+		   //          if (!isNaN(z[i])){
+		   //              tt = i;
+		   //              break;
+		   //          }
+		   //     };
+		   //     var col = z.substring(0,tt);
+     //           var row = parseInt(z.substring(tt));
+     //           var value = worksheet[z].v;
+     //          // console.log(value)
+     //           if(value && value=='Template ID' && arrayOfTemplateIdsCols.indexOf(col)<0){
+     //           	  arrayOfTemplateIdsCols.push(col);
+     //           	  arrayOfTemplateIds[col] = value;
+     //           }
+     //       	   //console.log(z)
+     //       }
+     //       // console.log(arrayOfTemplateIds)
+     //       // console.log(arrayOfTemplateIdsCols)
+	    // })
+	// const result = XLSX.utils.sheet_to_json(workbook.Sheets[sheet_name_list[0]]);
+	// console.log(XLSX.utils.sheet_to_json(workbook.Sheets[sheet_name_list[0]], {defVal:""}))
+	
 })
 
 app.get('*', (req, res)=>{
@@ -91,6 +181,7 @@ function worksheetTempalte(references){
 
 
 function problemRefTemplate(references){
+	     console.log(references.paramsArr);
 	     let prob_refs = [];        
 	     if(references.paramsArr.length>0){
 		 	for(let x of references.paramsArr){
@@ -121,7 +212,6 @@ function solutionTemplate(references){
 	     }else if(references.ques_type==="fib"){
 	     	   return fibSolutionTemplate(references);
 	     }
-	                   
 }
 
 function problemTemplate(references){
@@ -139,18 +229,12 @@ function problemTemplate(references){
 	 	}
 	 }
      let text = `<p>${references.ques_txt}</p>`;
-     
-
-
 
      if(references.ques_type==="fib"){
-	    let ques_txt = (references.ques_txt).replace('___', '<fib type="int" name="AA"/>');
-		text = `<group><p>${ques_txt}</p>`;
-      }
-
-
-
-      if(references.ques_type==="mcq"){
+        let ques_txt = (references.ques_txt).replace('___', '<fib type="int" name="AA"/>');
+	     text = `<p>${ques_txt}</p><group>`;
+     }
+     if(references.ques_type==="mcq"){
 	    let options = (references.ans_txt).split("\n");
 		let optionsWrapper = '';
 		let c = 0, sol='';
@@ -160,28 +244,28 @@ function problemTemplate(references){
 			optionsWrapper += '<choice name="'+opt+'">'+k[0]+'</choice>';
 			++c;
 		}
-
-		if(references.ques_img!==''){
-         let imgData = (references.ques_img).split("##");
-         let src = (imgData[0]).trim(),
-             width = (imgData[1]).trim(),
-             height = (imgData[2]).trim();
-            imgData = `<img src=${src} width=${width} height=${height} />`;
-            text = `<group><p>${references.ques_txt}</p><p>${imgData}</p>${optionsWrapper}`;
-        }else
-	    	text = `<group><p>${references.ques_txt}</p>${optionsWrapper}`;
+		// if(references.ques_img!==''){
+  //        let imgData = (references.ques_img).split("##");
+  //        let src = (imgData[0]).trim(),
+  //            width = (imgData[1]).trim(),
+  //            height = (imgData[2]).trim(),
+  //            alt = (imgData[3]).trim();
+  //            imgData = `<img src=${src} width=${width} height=${height} alt=${alt}/>`;
+  //            text = `<group><p>${references.ques_txt}</p><p>${imgData}</p>${optionsWrapper}`;
+  //       }else
+	 //    	 text = `<group><p>${references.ques_txt}</p>${optionsWrapper}`;
       }
 
 
-      if(references.ques_img!=='' && references.ques_type!=="mcq"){
-         let imgData = (references.ques_img).split("##");
-            console.log(imgData)
-         let src = (imgData[0]).replace("\n", "").trim(),
-             width = (imgData[1]).replace("\n", "").trim(),
-             height = (imgData[2]).replace("\n", "").trim();
-            imgData = `<img src=${src} width=${width} height=${height} />`;
-            text += imgData;
-      }
+      // if(references.ques_img!=='' && references.ques_type!=="mcq"){
+      //    let imgData = (references.ques_img).split("##");
+      //       console.log(imgData)
+      //    let src = (imgData[0]).replace("\n", "").trim(),
+      //        width = (imgData[1]).replace("\n", "").trim(),
+      //        height = (imgData[2]).replace("\n", "").trim();
+      //       imgData = `<img src=${src} width=${width} height=${height} />`;
+      //       text += imgData;
+      // }
     
 	 return {
               name : `problem_tmpl`,
@@ -202,7 +286,6 @@ function problemTemplate(references){
         }
 }
 
-
 function multipleChoiseSolutionTemplate(references){
 	let options = (references.ans_txt).split("\n");
 	let optionsWrapper = '';
@@ -216,13 +299,10 @@ function multipleChoiseSolutionTemplate(references){
 	return `<solution><grid columns="150px" gap="5px">${optionsWrapper}</grid></solution></group>`;
 }
 
-
 function fibSolutionTemplate(references){
 	let ans_txt = references.ans_txt;
 	return `<solution><cond><fib_ref name="AA"/>==${ans_txt}</cond></solution></group>`;
 }
-
-
 
 function normalSolutionTemplate(){
 	return `<solution></solution>`;
@@ -236,6 +316,11 @@ function worksheetRefTempalte(references){
 	     	  }
 	     }
 }
+
+function tutelageRefTempalte(references){
+	 	 return `<tutelage_ref name="T1"><bind name="A"  val="A"/><bind name="B"  val="B"/><bind name="AA" ><fib_ref name="fib1"/></bind></tutelage_ref>`;
+}
+
 
 app.post('/', (req, res)=>{
 	    const wrksheetName = (req.body.work_tmp_name).trim();
@@ -267,6 +352,7 @@ app.post('/', (req, res)=>{
              let data = [
 		    	 tutelageTempalte(req.body),
 		         problemTemplate(req.body),
+		         tutelageRefTempalte(),
 		         worksheetTempalte(req.body),
 		         worksheetRefTempalte(req.body)
 		    ]
@@ -280,6 +366,45 @@ app.post('/', (req, res)=>{
 	    
         
 });
+
+
+app.post('/upload-xlsx', (req, res)=>{
+	new formidable.IncomingForm().parse(req)
+	    .on('file', function(name, file) {
+	        const tempPptFileName = uuidv4();
+	        console.log(tempPptFileName);
+            fs.writeFileSync(`public/xmls/${tempPptFileName}.xlsx`, `${file.path}`);
+            
+	        // fs.createReadStream(`${file.path}`)
+	        //   .pipe(unzip.Extract({ path: `./temp/${tempPptFileName}` }))
+	        //   .on("close", ()=>{
+	        //        readSilesAsJSON(tempPptFileName)
+	        //   })
+	        // yauzl.open(`${file.path}`, {lazyEntries: true}, function(err, zipfile) {
+	        //   if (err) throw err;
+	        //   console.log(zipfile);
+	        //    zipfile.on("entry", function(entry) {
+	        //         console.log("entry");
+	        //         // zipfile.openReadStream(entry, function(err, readStream) {
+	        //         //   if (err) throw err;
+	        //         //   readStream.on("end", function() {
+	        //         //     zipfile.readEntry();
+	        //         //   });
+	        //         //   readStream.pipe(`./temp2/${tempPptFileName}`);
+	        //         // });
+	        //   });
+	        // })
+	    })
+	    .on('field', function(name, field) {
+	        console.log('Got a field:', field);
+	    })
+	    .on('error', function(err) {
+	        next(err);
+	    })
+	    .on('end', function() {
+	        res.end();
+	    });
+})
 
 
 app.listen(CONFIG.port, (err)=>{

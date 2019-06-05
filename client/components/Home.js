@@ -97,6 +97,9 @@ class Home extends Component{
          document.getElementById('show_xml').value = data;
 	  	 return false;
 	  }
+	  uploadQuestionsXML = ()=>{
+	  	  e.preventDefault();
+	  }
       render(){
       	 return(
            <Fragment>
@@ -126,6 +129,18 @@ class Home extends Component{
 									   </table>
 										<table className="prob-table">
 										   <tbody>
+
+										      <tr className="margin-top-5">
+											    <td><label>Tutelage</label></td>
+											    <td>
+									        	  <select className="input-box" name="ques_type" onChange={this.handleChange}>
+										            <option value="normal">Type1</option>
+										            <option value="mcq">Type2</option>
+										            <option value="fib">Type3</option>
+										          </select>
+											    </td> 
+											  </tr>
+
 										      <tr className="margin-top-5">
 											    <td><label>Problem name</label></td>
 											    <td><input className="input-box" type="text" name="prob_tmp_name" /></td> 
@@ -166,6 +181,17 @@ class Home extends Component{
 										   </tbody>
 										</table>									
 									</form>
+                                   
+                                   <form novalidate  method="post" action="/upload-xlsx" enctype="multipart/form-data" onSubmit={this.uploadQuestionsXML}>
+	                                   <table className="padding-botm-8">
+	                                    <tbody>
+										   <tr className="margin-top-5">
+									        <td><input type="file" class="custom-file-input" id="uploaded_xlsx" name="uploaded_xlsx" /></td>
+										    <td><button  className="btn-default margin-top-20" type="submit">upload</button></td> 
+									       </tr>
+									     </tbody>
+										</table>									
+								   </form>
 			        	 	  </div>
 	                          <div>
 	                          	<textarea id="show_xml" rows="30" cols="50" placeholder="Output as XML"></textarea>
