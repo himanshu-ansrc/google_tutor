@@ -94,11 +94,21 @@ class Home extends Component{
          const {data} = await axios.post('/', {ques_txt, ques_img, ans_txt, prob_tmp_name, work_tmp_name, new_work_tmp_name, ques_type, paramsArr});
          //data = data.replace('<xml>', '');
          // data = data.replace('</xml>', '')
-         document.getElementById('show_xml').value = data;
+         document.getElementById('show_xml').value =  vkbeautify.xml(data);
 	  	 return false;
 	  }
-	  uploadQuestionsXML = ()=>{
-	  	  e.preventDefault();
+	  uploadQuestionsXML = async (e)=>{
+	  	  // console.log(e.target.elements.uploaded_xlsx.files[0])
+	  	   e.preventDefault();
+	  	   let formData = new FormData() 
+           formData.set('uploaded_xlsx', e.target.elements.uploaded_xlsx.files[0])
+	  	   const result = await axios.post('/upload-xlsx', formData, {
+	  	     	 headers: {
+		          'content-type': 'multipart/form-data'
+		          }
+	     	    }
+	  	   )
+	  	   document.getElementById('show_xml').value = vkbeautify.xml(result.data);
 	  }
       render(){
       	 return(
@@ -107,7 +117,7 @@ class Home extends Component{
 	        	 <div className="flex main-content-wrapper">
 		        	 <div className="flex space-bw main-content">
 		        	          <div className="ques-table">
-									<form method="post" onSubmit={this.dataSubmit} id="main_form">
+									<form method="post"  className="display-none" onSubmit={this.dataSubmit} id="main_form">
 									   <table className="padding-botm-8">
 								        <tbody>
 								          <tr className="margin-top-5">
@@ -182,21 +192,20 @@ class Home extends Component{
 										</table>									
 									</form>
                                    
-                                   <form novalidate  method="post" action="/upload-xlsx" enctype="multipart/form-data" onSubmit={this.uploadQuestionsXML}>
+                                   <form novalidate  method="post" enctype="multipart/form-data" onSubmit={this.uploadQuestionsXML}>
 	                                   <table className="padding-botm-8">
 	                                    <tbody>
 										   <tr className="margin-top-5">
 									        <td><input type="file" class="custom-file-input" id="uploaded_xlsx" name="uploaded_xlsx" /></td>
-										    <td><button  className="btn-default margin-top-20" type="submit">upload</button></td> 
+										    <td><button  className="btn-default margin-top-20">upload</button></td> 
 									       </tr>
 									     </tbody>
 										</table>									
 								   </form>
 			        	 	  </div>
 	                          <div>
-	                          	<textarea id="show_xml" rows="30" cols="50" placeholder="Output as XML"></textarea>
-	                          </div>
-			        	 	  
+	                          	<textarea id="show_xml" rows="30" cols="80" placeholder="Output as XML"></textarea>
+	                          </div>	  
 		        	 </div>
 		        </div>
 	           </main>

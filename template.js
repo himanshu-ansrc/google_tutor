@@ -11,6 +11,7 @@ export default () => {
         <body>
           <div id="root"></div>
           <script type="text/javascript" src="/dist/bundle.js"></script>
+          <script type="text/javascript" src="/js/vkbeauty.js"></script>
         </body>
       </html>`
 }
