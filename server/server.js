@@ -327,7 +327,12 @@ function multipleChoiseSolutionTemplate(references){
 	let choises = '';
 
 	//FIB with MCQ
-    let mcqUQuestions = references.mcq_question || '';
+    let mcqQuestions = '';
+    let group = `<group>`;
+    if(references.mcq_question){
+       mcqQuestions = `<p>${references.mcq_question}</p>`;
+       group = `<group name='${references.prob_tmp_name}' type='MCQ'>`
+    }
 	//
 	for(let x of references.mcq_choises){
          choises += `<choice name="C${mcqChioseCount}">${x}</choice>`;
@@ -338,7 +343,7 @@ function multipleChoiseSolutionTemplate(references){
         choiseAnswer = references.mcq_answer.split(' ')[1];
 	}
 	let optionsWrapper = `<repeat val="${count}" index="i"><cond><choice_ref name="C$i+1$"/>==$(i)==(${parseInt(choiseAnswer)-1})$</cond></repeat>`;
-	return `<group>${mcqUQuestions}${choises}<solutions><solution>${optionsWrapper}</solution></solutions></group>`;
+	return `${group}${mcqQuestions}${choises}<solutions><solution>${optionsWrapper}</solution></solutions></group>`;
 }
 
 function fibSolutionTemplate(references){
@@ -352,7 +357,11 @@ function fibSolutionTemplate(references){
     if(references['array'].length>0){
     	return arraySolutionTempalte(references);
     }
-	return `<group>${ans_txt}<solutions><solution>${references.fib_conditions[1]}</solution></solutions></group>`;
+    let group = `<group>`;
+    if(references.mcq_question){
+       group = `<group name='${references.prob_tmp_name}' type='FIB'>`
+    }
+	return `${group}${ans_txt}<solutions><solution>${references.fib_conditions[1]}</solution></solutions></group>`;
 }
 
 function arraySolutionTempalte(references){
