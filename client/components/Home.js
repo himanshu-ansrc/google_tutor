@@ -110,6 +110,16 @@ class Home extends Component{
 	  	   )
 	  	   document.getElementById('show_xml').value = vkbeautify.xml(result.data);
 	  }
+	  copyToClipboard = (e)=>{
+	  	 console.log(e);
+	  	 e.target.innerHTML = "copied";
+	  	 let a = document.getElementById('show_xml');copy_clipboard
+	  	     a.select();
+	  	     document.execCommand("copy");
+	  	 setTimeout(()=>{
+            document.getElementById('copy_clipboard').innerHTML = "copy to clipboard";
+	  	 }, 200);
+	  }
       render(){
       	 return(
            <Fragment>
@@ -198,6 +208,9 @@ class Home extends Component{
 										   <tr className="margin-top-5">
 									        <td><input type="file" class="custom-file-input" id="uploaded_xlsx" name="uploaded_xlsx" /></td>
 										    <td><button  className="btn-default margin-top-20">upload</button></td> 
+									       </tr>
+									       <tr className="margin-top-5">
+									        <td><button  className="btn-default margin-top-20" id="copy_clipboard" onClick={this.copyToClipboard}>copy to clipboard</button></td>
 									       </tr>
 									     </tbody>
 										</table>									

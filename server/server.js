@@ -325,6 +325,10 @@ function multipleChoiseSolutionTemplate(references){
 	let count = references.mcq_choises.length;
 	let mcqChioseCount = 1;
 	let choises = '';
+
+	//FIB with MCQ
+    let mcqUQuestions = references.mcq_question || '';
+	//
 	for(let x of references.mcq_choises){
          choises += `<choice name="C${mcqChioseCount}">${x}</choice>`;
          ++mcqChioseCount;
@@ -334,7 +338,7 @@ function multipleChoiseSolutionTemplate(references){
         choiseAnswer = references.mcq_answer.split(' ')[1];
 	}
 	let optionsWrapper = `<repeat val="${count}" index="i"><cond><choice_ref name="C$i+1$"/>==$(i)==(${parseInt(choiseAnswer)-1})$</cond></repeat>`;
-	return `<group>${choises}<solutions><solution>${optionsWrapper}</solution></solutions></group>`;
+	return `<group>${mcqUQuestions}${choises}<solutions><solution>${optionsWrapper}</solution></solutions></group>`;
 }
 
 function fibSolutionTemplate(references){
@@ -488,6 +492,12 @@ function tutelageRefTempalte(references){
 	 	 return `<tutelage_ref name="T1"><bind name="A"  val="A"/><bind name="B"  val="B"/><bind name="AA" ><fib_ref name="fib1"/></bind></tutelage_ref>`;
 }
 
+function mcqfibSolutionTemplate(references){
+         let mcq = multipleChoiseSolutionTemplate(references);
+         let fib = fibSolutionTemplate(references);
+         return fib+mcq;
+}
+
 function solutionTemplate(references){
 	     if(references['boxing'].length>0){
              return checkBoxing(references);
@@ -522,6 +532,9 @@ function solutionTemplate(references){
 	     }
 	     else if(references.ques_type==="lp"){
 	     	   return lpSolutionTemplate(references);
+	     }
+	     else if(references.ques_type==="mcq/fib"){
+	     	   return mcqfibSolutionTemplate(references);
 	     }
 }
 
@@ -565,7 +578,6 @@ app.post('/', (req, res)=>{
 	        fs.writeFileSync('public/xmls/worksheets.json', JSON.stringify(workSheets))
 	        fs.writeFileSync('public/xmls/'+newwrksheetName+'.txt', JSON.stringify(data))
 	        res.send(XMLFormatter(`<xml>${xml}</xml>`))
-
 	    }
 });
 
@@ -643,7 +655,7 @@ function uploadXLSX(workbook, inputfiletoread){
 		 	   questionObj['ques_type'] = arrEle.col2;
 		 	}
 		 }
-		 if(arrEle.col1=='Answer stem'){
+		 if(arrEle.col1=='Answer stem' || arrEle.col1=='Answer Stem'){
 		 	if(arrEle.col2!==undefined){
 		 	   if(/(https?:\/\/.*\.(?:png|jpg|svg))/.test(arrEle.col2)){
                   questionObj['ans_txt'] += `<p><img src="${arrEle.col2}" width="100" alt="${arrEle.col3}"/></p>`;
@@ -660,6 +672,10 @@ function uploadXLSX(workbook, inputfiletoread){
 		 	if(arrEle.col2!=='' || arrEle.col2!==undefined)
 		 	   questionObj['mcq_answer'] = arrEle.col2;
 		 }
+         if(arrEle.col1=='MCQ Question'){
+		 	if(arrEle.col2!=='' || arrEle.col2!==undefined)
+		 	   questionObj['mcq_question'] = arrEle.col2;
+		 } 
 		 if(arrEle.col1=='Boxing Group'){
             questionObj['boxing'][0] = arrEle.col2;
 		 }
