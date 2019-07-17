@@ -508,6 +508,10 @@ function mcqfibSolutionTemplate(references){
 }
 
 function solutionTemplate(references){
+
+	     console.log(references.sub_questions);
+
+
 	     if(references['boxing'].length>0){
              return checkBoxing(references);
 	     }
@@ -631,10 +635,15 @@ function uploadXLSX(workbook, inputfiletoread){
    //bg
    questionObj['x_point'] = [];
    questionObj['y_value'] = [];
-   
-     //MCQ
-     let mcqChioseCount = 1;
-     questionObj['mcq_choises'] = [];
+
+    //MCQ
+    let mcqChioseCount = 1;
+    questionObj['mcq_choises'] = [];
+
+
+    //SUBQUESTION ARRAY
+    let subQuestionArray = [];
+    let subQuestionObj = {};
 
 	for(let arrEle of xlsxJSON){
 		 if(arrEle.col1=='Tutor ID'){
@@ -654,10 +663,13 @@ function uploadXLSX(workbook, inputfiletoread){
 		 if(arrEle.col1=='Question'){
 	          if(arrEle.col2!==undefined){
 			 	   if(/(https?:\/\/.*\.(?:png|jpg|svg))/.test(arrEle.col2)){
+			 	   	  arrEle.col3 = arrEle.col3 || '';
 	                  questionObj['ques_txt'] += `<p><img src="${arrEle.col2}" width="100" alt="${arrEle.col3}"/></p>`;
 			 	   }else
 			    	  questionObj['ques_txt'] += `<p>${arrEle.col2}</p>`;
 		 	  }
+
+		 	  subQuestionObj['mcq_question'] = questionObj['ques_txt'];
 		 }
 		 if(arrEle.col1=='QuesType'){
 		 	if(arrEle.col2!==undefined){
@@ -667,19 +679,40 @@ function uploadXLSX(workbook, inputfiletoread){
 		 if(arrEle.col1=='Answer stem' || arrEle.col1=='Answer Stem'){
 		 	if(arrEle.col2!==undefined){
 		 	   if(/(https?:\/\/.*\.(?:png|jpg|svg))/.test(arrEle.col2)){
+		 	   	  arrEle.col3 = arrEle.col3 || '';
                   questionObj['ans_txt'] += `<p><img src="${arrEle.col2}" width="100" alt="${arrEle.col3}"/></p>`;
 		 	   }else
 		    	  questionObj['ans_txt'] += `<p>${arrEle.col2}</p>`;
 		 	}
 		 }
-		 if(arrEle.col1 && arrEle.col1.match('Choice') && arrEle.col1!=='Choice Answer'){
-		 	if(arrEle.col2!==undefined){
-		 	   questionObj['mcq_choises'].push(arrEle.col2)
-		 	}
+		 if(arrEle.col1 && arrEle.col1.match('Choice') && arrEle.col1!=='Choice Answer' && arrEle.col2!==undefined){
+		 	   if(/(https?:\/\/.*\.(?:png|jpg|svg))/.test(arrEle.col2)){
+		 	   	  arrEle.col3 = arrEle.col3 || '';
+	              questionObj['mcq_choises'].push(`<p><img src="${arrEle.col2}" width="100" alt="${arrEle.col3}"/></p>`)
+		 	   }else
+     		 	  questionObj['mcq_choises'].push(arrEle.col2)
+
+     		   subQuestionObj['mcq_choises'] = questionObj['mcq_choises'];
 		 }
 		 if(arrEle.col1=='Choice Answer'){
-		 	if(arrEle.col2!=='' || arrEle.col2!==undefined)
-		 	   questionObj['mcq_answer'] = arrEle.col2;
+		 	if(arrEle.col2!=='' || arrEle.col2!==undefined){
+		 	   if(/(https?:\/\/.*\.(?:png|jpg|svg))/.test(arrEle.col2)){
+		 	   	  arrEle.col3 = arrEle.col3 || '';
+	              questionObj['mcq_answer'] = `<p><img src="${arrEle.col2}" width="100" alt="${arrEle.col3}"/></p>`;
+		 	   }else
+     		 	  questionObj['mcq_answer'] = arrEle.col2;
+
+     		   subQuestionObj['mcq_answer'] = questionObj['mcq_answer'];
+
+     		   subQuestionArray.push(subQuestionObj);
+     		   subQuestionObj = {};
+               
+               questionObj['mcq_answer'] = '';
+               questionObj['mcq_choises'] = [];
+               questionObj['ques_txt'] = '';
+
+     		   console.log( questionObj['mcq_choises']);
+		 	}
 		 }
          if(arrEle.col1=='MCQ Question'){
 		 	if(arrEle.col2!=='' || arrEle.col2!==undefined)
@@ -846,6 +879,8 @@ function uploadXLSX(workbook, inputfiletoread){
 
     questionObj['fib_conditions'].push(fibCondition);
     questionObj['fib_conditions'].push(fibConditionRef);
+
+    questionObj['sub_questions'] = subQuestionArray;
 
     let data = [
 	    	// tutelageTempalte(questionObj),
