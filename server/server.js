@@ -312,7 +312,9 @@ function checkBoxing(references){
    return `<group><boxing name="BOX_${randonInt}" count="A*B" limit="Math.max(A-1,3)">$P$</boxing><solutions><solution><cond><boxing_ref name="BOX_${randonInt}" field="group"/> == $A$</cond><cond><boxing_ref name="BOX_${randonInt}" field="size"/> == $B$</cond></solution></solutions></group>`;
 }
 
-function multipleChoiseSolutionTemplate(references){
+function multipleChoiseSolutionTemplate(ref){
+
+	let totalQuestions = ref.sub_questions;
 	// let options = (references.ans_txt).split("\n");
 	// let optionsWrapper = '';
 	// let c = 0, sol='';
@@ -322,28 +324,37 @@ function multipleChoiseSolutionTemplate(references){
 	// 	optionsWrapper += '<cond><choice_ref name="'+opt+'"/>== '+k[1]+'</cond>';
 	// 	++c;
 	// }
-	let count = references.mcq_choises.length;
-	let mcqChioseCount = 1;
-	let choises = '';
+	let finalQuestionXML = '';
+    let alphabetArray= "abcdefghikjklmnopqrstuvwxyzabcdefghikjklmnopqrstuvwxyz";
+    let counter = 0;
 
-	//FIB with MCQ
-    let mcqQuestions = '';
-    let group = `<group>`;
-    if(references.mcq_question){
-       mcqQuestions = `<p>${references.mcq_question}</p>`;
-       group = `<group name='${references.prob_tmp_name}' type='MCQ'>`
-    }
-	//
-	for(let x of references.mcq_choises){
-         choises += `<choice name="C${mcqChioseCount}">${x}</choice>`;
-         ++mcqChioseCount;
+	for(let references of totalQuestions){
+		    console.log(references);
+			let count = references.mcq_choises.length;
+			let mcqChioseCount = 1;
+			let choises = '';
+
+			//FIB with MCQ
+		    let mcqQuestions = '';
+		    let group = `<group>`;
+		    if(references.mcq_question || totalQuestions.length>1){
+		       mcqQuestions = `<p>${references.mcq_question}</p>`;
+		       group = `<group name='${ref.prob_tmp_name}' type='MCQ'>`
+		    }
+			//
+			for(let x of references.mcq_choises){
+		         choises += `<choice name="${alphabetArray[counter].toUpperCase()}${mcqChioseCount}">${x}</choice>`;
+		         ++mcqChioseCount;
+			}
+			let choiseAnswer = references.mcq_answer;
+			if(references.mcq_answer && references.mcq_answer.match('Choice')){
+		        choiseAnswer = references.mcq_answer.split(' ')[1];
+			}
+			let optionsWrapper = `<repeat val="${count}" index="i"><cond><choice_ref name="${alphabetArray[counter].toUpperCase()}$i+1$"/>==$(i)==(${parseInt(choiseAnswer)-1})$</cond></repeat>`;
+			finalQuestionXML += `${group}${mcqQuestions}${choises}<solutions><solution>${optionsWrapper}</solution></solutions></group>`;
+			++counter;
 	}
-	let choiseAnswer = references.mcq_answer;
-	if(references.mcq_answer && references.mcq_answer.match('Choice')){
-        choiseAnswer = references.mcq_answer.split(' ')[1];
-	}
-	let optionsWrapper = `<repeat val="${count}" index="i"><cond><choice_ref name="C$i+1$"/>==$(i)==(${parseInt(choiseAnswer)-1})$</cond></repeat>`;
-	return `${group}${mcqQuestions}${choises}<solutions><solution>${optionsWrapper}</solution></solutions></group>`;
+     return finalQuestionXML;
 }
 
 function fibSolutionTemplate(references){
@@ -423,7 +434,7 @@ function clockSolutionTemplate(references){
 
 function tapSolutionTemplate(references){
    	 let randonInt = Math.floor(Math.random() * 100),
-   	     a = parseInt(references['paramsArr'][0]['value']),
+   	     a = `"${references['paramsArr'][0]['value']}"`,
    	     k = [],
 	     b = parseInt(references['paramsArr'][1]['value']);
          while(b>0){
@@ -431,7 +442,7 @@ function tapSolutionTemplate(references){
             --b;
          }
          let tape = `<tape name="tape${randonInt}"/>`,
-	     tapeRef = `<solution><cond><tape_ref name="tape${randonInt}" />.inOrder(${k.toString()})</solution>`;
+	     tapeRef = `<solution><cond><tape_ref name="tape${randonInt}" />.inOrder(${k.toString()})<cond></solution>`;
 	 return `<group>${references.ans_txt}${tape}<solutions>${tapeRef}</solutions></group>`;
 }
 
@@ -710,8 +721,6 @@ function uploadXLSX(workbook, inputfiletoread){
                questionObj['mcq_answer'] = '';
                questionObj['mcq_choises'] = [];
                questionObj['ques_txt'] = '';
-
-     		   console.log( questionObj['mcq_choises']);
 		 	}
 		 }
          if(arrEle.col1=='MCQ Question'){
