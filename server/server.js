@@ -283,8 +283,8 @@ function problemTemplate(references){
             }
 	 	    paramsList += `</params>`;
 	    }
-
-	    return `<problem_tmpl name="${references.prob_tmp_name}" width="400">${paramsList}${text}${solutionTemplate(references)}</problem_tmpl>`
+        references.ques_width = references.ques_width || 400; 
+	    return `<problem_tmpl name="${references.prob_tmp_name}" width="${references.ques_width}">${paramsList}${text}${solutionTemplate(references)}</problem_tmpl>`
      
 	 // return {
   //             name : `problem_tmpl`,
@@ -333,7 +333,7 @@ function multipleChoiseSolutionTemplate(ref){
 			let count = references.mcq_choises.length;
 			let mcqChioseCount = 1;
 			let choises = '';
-
+			let isTypeImage = false;
 			//FIB with MCQ
 		    let mcqQuestions = '';
 		    let group = `<group>`;
@@ -343,8 +343,15 @@ function multipleChoiseSolutionTemplate(ref){
 		    }
 			//
 			for(let x of references.mcq_choises){
-		         choises += `<choice name="${alphabetArray[counter].toUpperCase()}${mcqChioseCount}">${x}</choice>`;
+				 if(/(https?:\/\/.*\.(?:png|jpg|svg))/.test(x)){
+				   isTypeImage = true;
+                   choises += `<cell><choice name="${alphabetArray[counter].toUpperCase()}${mcqChioseCount}">${x}</choice></cell>`;
+				 }else
+		           choises += `<choice name="${alphabetArray[counter].toUpperCase()}${mcqChioseCount}">${x}</choice>`;
 		         ++mcqChioseCount;
+			}
+			if(isTypeImage){
+			   choises = `<grid columns="150px 150px" gap="50px">${choises}</grid>`;
 			}
 			let choiseAnswer = references.mcq_answer;
 			if(references.mcq_answer && references.mcq_answer.match('Choice')){
@@ -676,6 +683,9 @@ function uploadXLSX(workbook, inputfiletoread){
 		 if(arrEle.col1=='Problem ID'){
 		 	if(arrEle.col2!==undefined)
 		 	   questionObj['prob_tmp_name'] = arrEle.col2;
+		 }
+		 if(arrEle.col1=='QuestionWidth'){
+		 	questionObj['ques_width'] = (arrEle.col2!==undefined) ? arrEle.col2 : 400;
 		 }
 		 if(arrEle.col1=='Conditions' || arrEle.col1=='Condition'){
 		 	if(arrEle.col2!==undefined)
