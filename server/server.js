@@ -336,9 +336,16 @@ function multipleChoiseSolutionTemplate(ref){
 			let isTypeImage = false;
 			//FIB with MCQ
 		    let mcqQuestions = '';
+		    let question = '';
+
 		    let group = `<group>`;
-		    if(references.mcq_question || totalQuestions.length>1){
+		    if(references.mcq_question){
+		       question = `<p>${references.ques_txt}</p>`;
 		       mcqQuestions = `<p>${references.mcq_question}</p>`;
+		       group = `<group name='${ref.prob_tmp_name}' type='MCQ'>`
+		    }
+		    if(totalQuestions.length>1){
+		       mcqQuestions = `<p>${references.ques_txt}</p>`;
 		       group = `<group name='${ref.prob_tmp_name}' type='MCQ'>`
 		    }
 			//
@@ -358,7 +365,7 @@ function multipleChoiseSolutionTemplate(ref){
 		        choiseAnswer = references.mcq_answer.split(' ')[1];
 			}
 			let optionsWrapper = `<repeat val="${count}" index="i"><cond><choice_ref name="${alphabetArray[counter].toUpperCase()}$i+1$"/>==$(i)==(${parseInt(choiseAnswer)-1})$</cond></repeat>`;
-			finalQuestionXML += `${group}${mcqQuestions}${choises}<solutions><solution>${optionsWrapper}</solution></solutions></group>`;
+			finalQuestionXML += `${question}${group}${mcqQuestions}${choises}<solutions><solution>${optionsWrapper}</solution></solutions></group>`;
 			++counter;
 	}
      return finalQuestionXML;
@@ -530,8 +537,9 @@ function tutelageRefTempalte(references){
 function mcqfibSolutionTemplate(references){
          let mcq = multipleChoiseSolutionTemplate(references);
          let fib = fibSolutionTemplate(references);
-         return fib+mcq;
+         return mcq+fib;
 }
+
 
 function solutionTemplate(references){
 
@@ -700,7 +708,7 @@ function uploadXLSX(workbook, inputfiletoread){
 			    	  questionObj['ques_txt'] += `<p>${arrEle.col2}</p>`;
 		 	  }
 
-		 	  subQuestionObj['mcq_question'] = questionObj['ques_txt'];
+		 	  subQuestionObj['ques_txt'] = questionObj['ques_txt'];
 		 }
 		 if(arrEle.col1=='QuesType'){
 		 	if(arrEle.col2!==undefined){
@@ -719,7 +727,7 @@ function uploadXLSX(workbook, inputfiletoread){
 		 if(arrEle.col1 && arrEle.col1.match('Choice') && arrEle.col1!=='Choice Answer' && arrEle.col2!==undefined){
 		 	   if(/(https?:\/\/.*\.(?:png|jpg|svg))/.test(arrEle.col2)){
 		 	   	  arrEle.col3 = arrEle.col3 || '';
-	              questionObj['mcq_choises'].push(`<p><img src="${arrEle.col2}" width="100" alt="${arrEle.col3}"/></p>`)
+	              questionObj['mcq_choises'].push(`<img src="${arrEle.col2}" width="100" alt="${arrEle.col3}"/>`)
 		 	   }else
      		 	  questionObj['mcq_choises'].push(arrEle.col2)
 
@@ -744,8 +752,10 @@ function uploadXLSX(workbook, inputfiletoread){
 		 	}
 		 }
          if(arrEle.col1=='MCQ Question'){
-		 	if(arrEle.col2!=='' || arrEle.col2!==undefined)
+		 	if(arrEle.col2!=='' || arrEle.col2!==undefined){
 		 	   questionObj['mcq_question'] = arrEle.col2;
+		 	   subQuestionObj['mcq_question'] = arrEle.col2;
+		 	}
 		 } 
 		 if(arrEle.col1=='Boxing Group'){
             questionObj['boxing'][0] = arrEle.col2;
